@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String expectedEmail;
@@ -37,17 +38,46 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
             const SizedBox(height: 12),
-            TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _login,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(vertical: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 child: const Text('Login'),
               ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Don't have an account? "),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                    );
+                  },
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
