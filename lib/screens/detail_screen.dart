@@ -1,13 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/movie.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final Movie movie;
 
   const DetailScreen({super.key, required this.movie});
 
   @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  late Box favoritesBox;
+  bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    favoritesBox = Hive.box('favorites');
+    isFavorite = favoritesBox.values.any((m) => m['title'] == widget.movie.title);
+  }
+
+  void toggleFavorite() {
+    setState(() {
+      if (isFavorite) {
+        final keyToRemove = favoritesBox.keys.firstWhere(
+                (key) => favoritesBox.get(key)['title'] == widget.movie.title);
+        favoritesBox.delete(keyToRemove);
+        isFavorite = false;
+      } else {
+        if (!favoritesBox.values.any((m) => m['title'] == widget.movie.title)) {
+          favoritesBox.add(widget.movie.toMap());
+        }
+        isFavorite = true;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final movie = widget.movie;
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(color: Colors.black),
@@ -44,18 +77,32 @@ class DetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.shopping_cart),
-                label: const Text('Acheter', style: TextStyle(fontSize: 18)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Buy logic here
+                  },
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Text('Acheter', style: TextStyle(fontSize: 18)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 20),
+                IconButton(
+                  onPressed: toggleFavorite,
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.red,
+                    size: 32,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

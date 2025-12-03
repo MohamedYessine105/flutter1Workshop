@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/movie.dart';
 import '../widgets/movie_card.dart';
 import 'detail_screen.dart';
-import 'signup_screen.dart';
+import 'favorites_screen.dart';
+import 'profile_screen.dart';
 import 'cart_screen.dart';
-import 'profile_screen.dart'; // <-- import ProfileScreen
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late Box<dynamic> favoritesBox;
+  late TabController _tabController;
 
   static final List<Movie> _movies = [
     Movie(
@@ -34,126 +44,105 @@ class HomeScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    favoritesBox = Hive.box('favorites');
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  void toggleFavorite(Movie movie) {
+    final isFavorite =
+    favoritesBox.values.any((m) => m['title'] == movie.title);
+
+    if (isFavorite) {
+      final keyToRemove = favoritesBox.keys.firstWhere(
+              (key) => favoritesBox.get(key)['title'] == movie.title);
+      favoritesBox.delete(keyToRemove);
+    } else {
+      favoritesBox.add(movie.toMap());
+    }
+
+    setState(() {}); // Refresh UI immediately
+  }
+
+  Widget buildMovieGrid() {
+    return ValueListenableBuilder(
+      valueListenable: favoritesBox.listenable(),
+      builder: (context, Box<dynamic> box, _) {
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: _movies.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.65,
+          ),
+          itemBuilder: (context, index) {
+            final movie = _movies[index];
+            final isFavorite =
+            box.values.any((m) => m['title'] == movie.title);
+
+            return Stack(
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailScreen(movie: movie),
+                      ),
+                    );
+                    setState(() {});
+                  },
+                  child: MovieCard(movie: movie),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () {
+                      toggleFavorite(movie);
+                    },
+                    child: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.red,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
-
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text('G-Store', style: TextStyle(color: Colors.white)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Transform.rotate(
-              angle: -0.2,
-              child: const Text(
-                'DEMO',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-
-      // -----------------------------
-      //          BODY
-      // -----------------------------
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-
-            // Expanded grid fixes overflow
-            Expanded(
-              child: GridView.builder(
-                itemCount: _movies.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.70,
-                ),
-                itemBuilder: (context, index) {
-                  final movie = _movies[index];
-                  return MovieCard(
-                    movie: movie,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailScreen(movie: movie),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // -----------------------------
-            //       FOOTER BUTTONS
-            // -----------------------------
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8), // extra safety
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SignupScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('logout '),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const CartScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.shopping_cart),
-                    label: const Text('Cart'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.deepOrange,
+          tabs: const [
+            Tab(icon: Icon(Icons.home), text: 'Home'),
+            Tab(icon: Icon(Icons.favorite), text: 'Favorites'),
+            Tab(icon: Icon(Icons.person), text: 'Profile'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          buildMovieGrid(),
+          const FavoritesScreen(),
+          const ProfileScreen(),
+        ],
       ),
     );
   }

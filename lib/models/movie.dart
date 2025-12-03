@@ -12,4 +12,26 @@ class Movie {
     required this.description,
     required this.price,
   });
+
+  // Convert Movie → Map
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'imagePath': imagePath,
+      'rating': rating,
+      'description': description,
+      'price': price,
+    };
+  }
+
+  // Convert Map → Movie
+  factory Movie.fromMap(Map data) {
+    return Movie(
+      title: data['title'],
+      imagePath: data['imagePath'],
+      rating: (data['rating'] as num).toDouble(),
+      description: data['description'],
+      price: (data['price'] as num).toDouble(),
+    );
+  }
 }
