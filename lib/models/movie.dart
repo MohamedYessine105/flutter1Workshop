@@ -1,4 +1,5 @@
 class Movie {
+  final int? id; // Add this
   final String title;
   final String imagePath;
   final double rating;
@@ -6,6 +7,7 @@ class Movie {
   final double price;
 
   const Movie({
+    this.id, // optional
     required this.title,
     required this.imagePath,
     required this.rating,
@@ -13,9 +15,9 @@ class Movie {
     required this.price,
   });
 
-  // Convert Movie → Map
   Map<String, dynamic> toMap() {
     return {
+      if (id != null) 'id': id,
       'title': title,
       'imagePath': imagePath,
       'rating': rating,
@@ -24,9 +26,9 @@ class Movie {
     };
   }
 
-  // Convert Map → Movie
   factory Movie.fromMap(Map data) {
     return Movie(
+      id: data['id'], // map id from DB
       title: data['title'],
       imagePath: data['imagePath'],
       rating: (data['rating'] as num).toDouble(),

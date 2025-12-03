@@ -44,9 +44,9 @@ class _BasketScreenState extends State<BasketScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
-                    await DBHelper().deleteMovie(index + 1); // delete by id
+                    await DBHelper().deleteMovie(movie.id!); // delete using the actual ID
                     setState(() {
-                      basketMovies = DBHelper().getBasketMovies();
+                      basketMovies = DBHelper().getBasketMovies(); // refresh the list
                     });
                   },
                 ),
